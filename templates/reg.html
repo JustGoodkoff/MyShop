@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <style>
+        .cont {
+            width: 50%;
+              height: 50px;
+              position: absolute;
+              top: 25%;
+              left: 25%;
+              margin: -25px 0 0 -25px;
+        }
+        .mb-0 {
+            position: absolute;
+              top: 10%;
+              left: 40%;
+              margin: -25px 0 0 -25px;
+        }
+
+
+    </style>
+
+</head>
+<body>
+    <form action="/register" method="post">
+        <div class="mb-0">
+                    <h1>Регистрация</h1>
+                </div>
+        <div class="cont">
+              <div class="mb-3">
+                <label for="inputName" class="form-label">Имя</label>
+                <input type="text" name="name" class="form-control" id="inputName">
+              </div>
+              <div class="mb-3">
+                <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
+                <input type="text" name="phone_number" class="form-control" id="inputPhoneNumber" aria-describedby="PhoneNumber">
+              </div>
+              <div class="mb-3">
+                <label for="inputAddress" class="form-label">Домашний адрес</label>
+                <input type="text" name="address" class="form-control" id="inputAddress">
+              </div>
+              <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+              </div>
+              <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+        </div>
+</form>
+</body>
+</html>
