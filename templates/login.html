@@ -1,29 +1,53 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <style>
+        .cont {
+            width: 50%;
+              height: 50px;
+              position: absolute;
+              top: 25%;
+              left: 25%;
+              margin: -25px 0 0 -25px;
+        }
+        .mb-0 {
+            position: absolute;
+              top: 10%;
+              left: 40%;
+              margin: -25px 0 0 -25px;
+        }
 
-{% block content %}
-    <h1>Авторизация</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(class="form-control", type="email") }}<br>
-            {% for error in form.email.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
+
+    </style>
+
+</head>
+<body>
+    <form action="/login" method="post">
+        <div class="mb-0">
+                    <h1>Авторизация</h1>
                 </div>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(class="form-control", type="password") }}<br>
-            {% for error in form.password.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-            {% endfor %}
-        </p>
-        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-        <div>{{ message }}</div>
-    </form>
-{% endblock %}
+        <div class="cont">
+              <div class="mb-3">
+                <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
+                <input type="text" name="phone_number" class="form-control" id="inputPhoneNumber" aria-describedby="PhoneNumber">
+              </div>
+              <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+              </div>
+              <div>
+                   <button type="submit" class="btn btn-primary mb-3">Войти</button>
+              </div>
+              <div class="mb-3">
+                  <a href="/registration">Еще нет аккаунта? Зарегистрироваться</a>
+              </div>
+        </div>
+</form>
+</body>
+</html>

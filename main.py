@@ -1,12 +1,19 @@
 from flask import Flask
 from flask import render_template
 from flask import request, redirect
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager
+from flask_login import login_user
+from flask_login import login_required
+from flask_login import logout_user
+
 from data import db_session
+from data.products import Product
 from data.users import User
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "my_shop_secret_key"
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 def main():
@@ -16,17 +23,35 @@ def main():
 
 @app.route('/')
 def fuck():
-    user = "Ученик Яндекс.Лицея"
+    user = "punk"
+    db_sess = db_session.create_session()
+    lst_products = db_sess.query(Product).all()
+    print(lst_products)
     return render_template('index.html', title='Домашняя страница',
-                           username=user)
+                           username=user, lst_products=lst_products)
 
 
-@app.route("/login")
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(User).get(user_id)
+
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == "POST":
+        req = request.form
+        phone_number = req.get("phone_number")
+        password = req.get("password")
+        print(phone_number)
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.phone_number == phone_number).first()
+        login_user(user)
+        return redirect("/")
     return render_template("login.html")
 
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/registration", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         req = request.form
@@ -44,8 +69,15 @@ def register():
             db_sess.add(user)
             db_sess.commit()
         print(name, address, phone_number, password)
-        return redirect(request.url)
+        # return redirect(request.url)
     return render_template("reg.html")
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 if __name__ == '__main__':
