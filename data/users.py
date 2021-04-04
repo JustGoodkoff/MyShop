@@ -14,6 +14,7 @@ class User(SqlAlchemyBase, UserMixin):
     phone_number = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     address = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    cart = sqlalchemy.Column(sqlalchemy.String, default="")
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
