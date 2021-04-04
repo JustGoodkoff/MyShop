@@ -5,6 +5,8 @@ from flask_login import LoginManager
 from flask_login import login_user
 from flask_login import login_required
 from flask_login import logout_user
+from flask_login import current_user
+from flask_login import user_logged_in
 
 from data import db_session
 from data.products import Product
@@ -49,6 +51,15 @@ def login():
         login_user(user)
         return redirect("/")
     return render_template("login.html")
+
+
+@app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
+def add_to_cart(product_id):
+    db_sess = db_session.create_session()
+    if user_logged_in:
+        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: User.cart + f"{product_id},"})
+        db_sess.commit()
+        return redirect("/")
 
 
 @app.route("/registration", methods=["GET", "POST"])
