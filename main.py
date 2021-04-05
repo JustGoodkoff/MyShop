@@ -2,10 +2,10 @@ from flask import Flask
 from flask import render_template
 from flask import request, redirect
 from flask_login import LoginManager
-from flask_login import login_user
-from flask_login import login_required
-from flask_login import logout_user
 from flask_login import current_user
+from flask_login import login_required
+from flask_login import login_user
+from flask_login import logout_user
 from flask_login import user_logged_in
 
 from data import db_session
@@ -25,12 +25,11 @@ def main():
 
 @app.route('/')
 def fuck():
-    user = "punk"
     db_sess = db_session.create_session()
     lst_products = db_sess.query(Product).all()
-    print(lst_products)
+    # print(lst_products)
     return render_template('index.html', title='Домашняя страница',
-                           username=user, lst_products=lst_products)
+                           page="home", lst_products=lst_products)
 
 
 @login_manager.user_loader
@@ -59,7 +58,36 @@ def add_to_cart(product_id):
     if user_logged_in:
         db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: User.cart + f"{product_id},"})
         db_sess.commit()
+        db_sess.close()
         return redirect("/")
+
+
+@app.route("/delete_from_cart/<int:product_id>", methods=['GET', 'POST'])
+def delete_from_cart(product_id):
+    if user_logged_in:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
+        cart = user.cart.split(",")
+        cart.remove(str(product_id))
+        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ",".join(cart)})
+        db_sess.commit()
+        db_sess.close()
+    return redirect("/cart")
+
+
+@app.route("/cart", methods=["GET", "POST"])
+def cart():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
+    cart = user.cart.split(",")
+    cart.pop()
+    # print(cart)
+    lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+    return render_template("index.html", title='Корзина',
+                           page="cart", lst_products=lst_products)
+
+
+
 
 
 @app.route("/registration", methods=["GET", "POST"])
@@ -79,8 +107,9 @@ def register():
             user.set_password(password=password)
             db_sess.add(user)
             db_sess.commit()
+            db_sess.close()
         print(name, address, phone_number, password)
-        # return redirect(request.url)
+        return redirect("/")
     return render_template("reg.html")
 
 

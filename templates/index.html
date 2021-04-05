@@ -6,9 +6,13 @@
     <div class="col">
         <div class="card mb-3">
             <img src={{product.image}} class="image" >
-            <div class="card-body">
+            <div class="card-body" >
                 <p class="card-text">{{ product.name }}</p>
-                <a href="/add_to_cart/{{ product.id }}" class="btn btn-primary">В корзину</a>
+                {% if page == "home" %}
+                    <a href="/add_to_cart/{{ product.id }}" class="btn btn-primary">В корзину</a>
+                {% elif page == "cart" %}
+                    <a href="/delete_from_cart/{{ product.id }}" class="btn btn-danger">Удалить</a>
+                {% endif %}
             </div>
         </div>
     </div>
