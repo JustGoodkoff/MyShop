@@ -9,6 +9,7 @@ from flask_login import logout_user
 from flask_login import user_logged_in
 
 from data import db_session
+from data.orders import Order
 from data.products import Product
 from data.users import User
 
@@ -20,14 +21,13 @@ login_manager.init_app(app)
 
 def main():
     db_session.global_init("db/my_shop.db")
-    app.run()
+    app.run(host="127.0.0.1", port="8000")
 
 
 @app.route('/')
 def fuck():
     db_sess = db_session.create_session()
     lst_products = db_sess.query(Product).all()
-    # print(lst_products)
     return render_template('index.html', title='Домашняя страница',
                            page="home", lst_products=lst_products)
 
@@ -50,6 +50,42 @@ def login():
         login_user(user)
         return redirect("/")
     return render_template("login.html")
+
+
+@app.route('/product/<int:product_id>', methods=['GET', 'POST'])
+def show_selected_product(product_id):
+    db_sess = db_session.create_session()
+    product = db_sess.query(Product).filter(Product.id == product_id).first()
+    print(product)
+    return render_template("product.html", name=product.name, image=product.image, description=product.description)
+
+
+@app.route("/create_order/<string:cart>/<int:total_cost>", methods=['GET', 'POST'])
+def create_order(cart, total_cost):
+    db_sess = db_session.create_session()
+    order = Order()
+    order.user_id = current_user.get_id()
+    order.order = cart
+    order.total_price = total_cost
+    db_sess.add(order)
+    db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ""})
+    db_sess.commit()
+    db_sess.close()
+    return redirect("/")
+
+
+@app.route("/cart", methods=["GET", "POST"])
+def cart():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
+    cart = user.cart.split(",")
+    cart.pop()
+    lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+    print(lst_products)
+    total_cost = sum([int(i.price) for i in lst_products])
+    cart = ",".join(cart)
+    return render_template("index.html", title='Корзина',
+                           page="cart", lst_products=lst_products, cart=cart, total_cost=total_cost)
 
 
 @app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
@@ -75,21 +111,6 @@ def delete_from_cart(product_id):
     return redirect("/cart")
 
 
-@app.route("/cart", methods=["GET", "POST"])
-def cart():
-    db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
-    cart = user.cart.split(",")
-    cart.pop()
-    # print(cart)
-    lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
-    return render_template("index.html", title='Корзина',
-                           page="cart", lst_products=lst_products)
-
-
-
-
-
 @app.route("/registration", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -111,6 +132,11 @@ def register():
         print(name, address, phone_number, password)
         return redirect("/")
     return render_template("reg.html")
+
+
+@app.route('/admin')
+def admin():
+    return render_template("admin.html")
 
 
 @app.route('/logout')
