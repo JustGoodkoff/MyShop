@@ -9,3 +9,4 @@ class Order(SqlAlchemyBase):
     user_id = sqlalchemy.Column(sqlalchemy.Integer, index=True)
     order = sqlalchemy.Column(sqlalchemy.String, default="")
     total_price = sqlalchemy.Column(sqlalchemy.String, default="0")
+    quantity_of_goods = sqlalchemy.Column(sqlalchemy.Integer, default=0)

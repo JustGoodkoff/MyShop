@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <style>
+        .cont {
+            width: 50%;
+              height: 50px;
+              position: absolute;
+              top: 25%;
+              left: 25%;
+              margin: -25px 0 0 -25px;
+        }
+        .mb-0 {
+            position: absolute;
+              top: 10%;
+              left: 40%;
+              margin: -25px 0 0 -25px;
+        }
+
+
+
+    </style>
+
+</head>
+<body>
+<form action="/create_product" method="post">
+    <div class="mb-0">
+        <h1>Создать товар</h1>
+    </div>
+    <div class="cont">
+        <div class="mb-3">
+            <label for="inputName" class="form-label">Название</label>
+            <input type="text" name="name" class="form-control" id="inputName">
+        </div>
+        <div class="mb-3">
+            <label for="inputImage" class="form-label">Ссылка на изображение</label>
+            <input type="text" name="image" class="form-control" id="inputImage">
+        </div>
+        <div class="mb-3">
+            <label for="inputPrice" class="form-label">Стоимость товара</label>
+            <input type="text" name="price" class="form-control" id="inputPrice">
+        </div>
+        <div class="mb-3">
+            <label for="inputDescription" class="form-label">Описание</label>
+            <input type="text" name="description" class="form-control" id="inputDescription">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary mb-3">Создать</button>
+        </div>
+    </div>
+</form>
+</body>
+</html>

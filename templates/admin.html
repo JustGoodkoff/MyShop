@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <title>{{title}}</title>
+</head>
+<body>
+<main role="main" class="container">
+    <a class="btn btn-warning mt-3 mb-3 btn-lg btn-block" href="/create_product">Добавить товар</a>
+<div class="row row-cols-1 row-cols-md-4 g-4 mt-2">
+    {% for product in lst_products %}
+    <div class="col">
+        <div class="card mb-3">
+            <!--            <img src="/static/img/{{product.image}}" class="image" >-->
+            <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
+            <div class="card-body">
+                <p class="card-text"><a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
+                <a href="/delete_product/{{ product.id }}" class="btn btn-danger">Удалить</a>
+                <a href="/change_product/{{ product.id }}" class="btn btn-danger">Изменить</a>
+            </div>
+            <div class="card-footer bg-transparent">{{product.price}}</div>
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+    </main>
+</body>
