@@ -20,7 +20,7 @@
 </head>
 <body>
 <main role="main" class="container">
-    <a class="btn btn-warning mt-3 mb-3 btn-lg btn-block" href="/create_product">Добавить товар</a>
+    <a class="btn btn-warning mt-3 mb-3 btn-lg btn-block" href="/admin/create_product">Добавить товар</a>
 <div class="row row-cols-1 row-cols-md-4 g-4 mt-2">
     {% for product in lst_products %}
     <div class="col">
@@ -29,11 +29,10 @@
             <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
             <div class="card-body">
                 <p class="card-text"><a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
-                <a href="/delete_product/{{ product.id }}" class="btn btn-danger">Удалить</a>
-                <a href="/change_product/{{ product.id }}" class="btn btn-danger">Изменить</a>
+                <a href="/admin/delete_product/{{ product.id }}" class="btn btn-danger ml-1">Удалить</a>
+                <a href="/admin/change_product/{{ product.id }}" class="btn btn-warning ml-3">Изменить</a>
             </div>
             <div class="card-footer bg-transparent">{{product.price}}</div>
-
         </div>
     </div>
     {% endfor %}

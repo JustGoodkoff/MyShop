@@ -25,31 +25,29 @@
     </style>
 </head>
 <body>
-<form action="/admin/create_product" method="post">
-
+<form action="/admin/change_product/{{product_id}}" method="post">
     <div class="mb-0">
-        <h1>Создать товар</h1>
+        <h1>Изменить товар</h1>
     </div>
-
     <div class="cont">
         <div class="mb-3">
             <label for="inputName" class="form-label">Название</label>
-            <input type="text" name="name" class="form-control" id="inputName">
+            <input type="text" name="name" class="form-control" value="{{name}}" id="inputName">
         </div>
         <div class="mb-3">
             <label for="inputImage" class="form-label">Ссылка на изображение</label>
-            <input type="text" name="image" class="form-control"  id="inputImage">
+            <input type="text" name="image" class="form-control" value="{{image}}"  id="inputImage">
         </div>
         <div class="mb-3">
             <label for="inputPrice" class="form-label">Стоимость товара</label>
-            <input type="text" name="price" class="form-control"  id="inputPrice">
+            <input type="text" name="price" class="form-control" value="{{price}}"  id="inputPrice">
         </div>
         <div class="mb-3">
             <label for="inputDescription" class="form-label">Описание</label>
-            <textarea class="form-control" name="description" id="inputDescription"></textarea>
+            <textarea class="form-control" name="description" id="inputDescription">{{description}}</textarea>
         </div>
         <div>
-            <button type="submit" class="btn btn-primary mb-3">Создать</button>
+            <button type="submit" class="btn btn-primary mb-3">Сохранить изменения</button>
         </div>
     </div>
 </form>

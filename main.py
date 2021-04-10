@@ -26,7 +26,7 @@ def main():
 
 
 @app.route('/')
-def fuck():
+def home():
     db_sess = db_session.create_session()
     lst_products = db_sess.query(Product).all()
     db_sess.close()
@@ -50,9 +50,10 @@ def login():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.phone_number == phone_number).first()
         login_user(user)
-        db_sess.query(User).filter(User.id == current_user.get_id()).update(
-            {User.cart: User.cart + ",".join([str(i) for i in session["order"]]) + ","})
-        session["order"] = []
+        if session.get("order"):
+            db_sess.query(User).filter(User.id == current_user.get_id()).update(
+                {User.cart: User.cart + ",".join([str(i) for i in session["order"]]) + ","})
+            session["order"] = []
         db_sess.commit()
         db_sess.close()
         return redirect("/")
@@ -104,19 +105,43 @@ def cart():
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
     cart = user.cart.split(",")
-    cart.pop()
+    cart = delete_removed_products(cart)
     lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
-    total_cost = sum([int(i.price) for i in lst_products])
+    total_cost = sum([i.price for i in lst_products])
     cart = ",".join(cart)
     return render_template("index.html", title='Корзина',
-                           page="cart", lst_products=lst_products, cart=cart, total_cost=total_cost)
+                           page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+
+
+def delete_removed_products(products_id):
+    db_sess = db_session.create_session()
+    new_cart = []
+    print(products_id)
+    for product_id in products_id:
+        if product_id != "":
+            if db_sess.query(Product).filter(Product.id == int(product_id)).first():
+                new_cart.append(product_id)
+    if not len(new_cart) == len(products_id) and not len(new_cart) == 0:
+        db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ",".join([i for i in new_cart])})
+    elif len(new_cart) == 0:
+        db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ""})
+    else:
+        return products_id
+    db_sess.commit()
+    db_sess.close()
+    return new_cart
 
 
 @app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
 def add_to_cart(product_id):
     if current_user.get_id():
         db_sess = db_session.create_session()
-        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: User.cart + f"{product_id},"})
+        user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
+        if user.cart == "":
+            db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: product_id})
+        else:
+            db_sess.query(User).filter(User.id == current_user.get_id()).update(
+                {User.cart: User.cart + f",{product_id}"})
         db_sess.commit()
         db_sess.close()
         return redirect("/")
@@ -143,7 +168,7 @@ def delete_from_cart(product_id):
     return redirect("/cart")
 
 
-@app.route('/create_product', methods=["GET", "POST"])
+@app.route('/admin/create_product', methods=["GET", "POST"])
 def add_product():
     if request.method == "POST":
         db_sess = db_session.create_session()
@@ -192,6 +217,37 @@ def admin():
     lst_products = db_sess.query(Product).all()
     db_sess.close()
     return render_template("admin.html", lst_products=lst_products)
+
+
+@app.route("/admin/change_product/<int:product_id>", methods=["GET", "POST"])
+def change_product(product_id):
+    if request.method == "POST":
+        db_sess = db_session.create_session()
+        req = request.form
+        name = req.get("name")
+        image = req.get("image")
+        price = req.get("price")
+        description = req.get("description")
+        if name and image and price and description:
+            product = Product()
+            product.name = name
+            product.image = image
+            product.price = price
+            product.description = description
+            db_sess.query(Product).filter(Product.id == product_id).update(
+                {Product.name: product.name, Product.image: product.image, Product.price: product.price,
+                 Product.description: description})
+            db_sess.commit()
+            db_sess.close()
+            return redirect("/")
+    db_sess = db_session.create_session()
+    product = db_sess.query(Product).filter(Product.id == product_id).first()
+    return render_template("admin_change_product.html",
+                           product_id=product_id,
+                           name=product.name,
+                           image=product.image,
+                           price=product.price,
+                           description=product.description)
 
 
 @app.route('/delete_product/<int:product_id>')

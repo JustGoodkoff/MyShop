@@ -7,7 +7,7 @@ class Product(SqlAlchemyBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, index=True,
                            primary_key=True, autoincrement=True)
-    image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
-    price = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    description = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+    image = sqlalchemy.Column(sqlalchemy.String, nullable=True, default="")
+    name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
+    price = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    description = sqlalchemy.Column(sqlalchemy.Text, default="Описание отсутствует")
