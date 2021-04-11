@@ -46,17 +46,22 @@ def login():
         req = request.form
         phone_number = req.get("phone_number")
         password = req.get("password")
-        print(phone_number)
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.phone_number == phone_number).first()
-        login_user(user)
-        if session.get("order"):
-            db_sess.query(User).filter(User.id == current_user.get_id()).update(
-                {User.cart: User.cart + ",".join([str(i) for i in session["order"]]) + ","})
-            session["order"] = []
-        db_sess.commit()
-        db_sess.close()
-        return redirect("/")
+        if phone_number != "" and password != "":
+            db_sess = db_session.create_session()
+            user = db_sess.query(User).filter(User.phone_number == phone_number).first()
+            if user and user.check_password(password):
+                login_user(user)
+                if session.get("cart"):
+                    db_sess.query(User).filter(User.id == current_user.get_id()).update(
+                        {User.cart: User.cart + ",".join([str(i) for i in session["cart"]]) + ","})
+                    session["cart"] = []
+                db_sess.commit()
+                db_sess.close()
+                return redirect("/")
+            else:
+                return render_template("login.html", wrong_data=True)
+        else:
+            return render_template("login.html", empty_form=True)
     return render_template("login.html")
 
 
@@ -81,8 +86,10 @@ def show_selected_product(product_id):
 def my_orders():
     db_sess = db_session.create_session()
     orders = db_sess.query(Order).filter(Order.user_id == current_user.get_id()).all()
-    print(orders)
-    return render_template("orders.html", title="Заказы", orders=orders)
+    if not orders:
+        return render_template("orders.html", title="Заказы", empty_orders=True)
+    else:
+        return render_template("orders.html", title="Заказы", orders=orders)
 
 
 @app.route("/create_order/<string:cart>/<int:total_cost>", methods=['GET', 'POST'])
@@ -103,20 +110,32 @@ def create_order(cart, total_cost):
 @app.route("/cart", methods=["GET", "POST"])
 def cart():
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
-    cart = user.cart.split(",")
-    cart = delete_removed_products(cart)
-    lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
-    total_cost = sum([i.price for i in lst_products])
-    cart = ",".join(cart)
-    return render_template("index.html", title='Корзина',
-                           page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+    if current_user.get_id():
+        user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
+        cart = user.cart.split(",")
+        cart = delete_removed_products(cart)
+        if not cart:
+            return render_template("index.html", page="cart", empty_cart=True)
+        else:
+            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+            total_cost = sum([i.price for i in lst_products])
+            cart = ",".join(cart)
+            return render_template("index.html", title='Корзина',
+                                   page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+    else:
+        if session.get("cart"):
+            cart = session["cart"]
+            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+            total_cost = sum([i.price for i in lst_products])
+            return render_template("index.html", title='Корзина',
+                                   page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+        else:
+            return render_template("index.html", page="cart", empty_cart=True)
 
 
 def delete_removed_products(products_id):
     db_sess = db_session.create_session()
     new_cart = []
-    print(products_id)
     for product_id in products_id:
         if product_id != "":
             if db_sess.query(Product).filter(Product.id == int(product_id)).first():
@@ -146,18 +165,18 @@ def add_to_cart(product_id):
         db_sess.close()
         return redirect("/")
     else:
-        if session.get("order"):
-            session["order"] = session.get("order") + [product_id]
-            print(session["order"])
+        if session.get("cart"):
+            session["cart"] = session.get("cart") + [product_id]
+            print(session["cart"])
         else:
-            session["order"] = [product_id]
-            print(session["order"])
+            session["cart"] = [product_id]
+            print(session["cart"])
     return redirect("/")
 
 
 @app.route("/delete_from_cart/<int:product_id>", methods=['GET', 'POST'])
 def delete_from_cart(product_id):
-    if user_logged_in:
+    if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
         cart = user.cart.split(",")
@@ -165,6 +184,10 @@ def delete_from_cart(product_id):
         db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ",".join(cart)})
         db_sess.commit()
         db_sess.close()
+    else:
+        cart = session["cart"]
+        cart.remove(product_id)
+        session["cart"] = cart
     return redirect("/cart")
 
 
@@ -177,37 +200,52 @@ def add_product():
         image = req.get("image")
         price = req.get("price")
         description = req.get("description")
-        product = Product()
-        product.name = name
-        product.image = image
-        product.price = price
-        product.description = description
-        db_sess.add(product)
-        db_sess.commit()
-        db_sess.close()
+        if name and price and image:
+            if price.isdigit():
+                product = Product()
+                product.name = name
+                product.image = image
+                product.price = price
+                product.description = description
+                db_sess.add(product)
+                db_sess.commit()
+                db_sess.close()
+                return redirect('/admin')
+            else:
+                return render_template("admin_create_product.html", wrong_data=True)
+        else:
+            return render_template("admin_create_product.html", empty_form=True)
     return render_template("admin_create_product.html")
 
 
 @app.route("/registration", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        db_sess = db_session.create_session()
         req = request.form
         name = req.get("name")
         address = req.get("address")
         phone_number = req.get("phone_number")
         password = req.get("password")
-        if name and address and phone_number and password:
-            db_sess = db_session.create_session()
-            user = User()
-            user.name = name
-            user.address = address
-            user.phone_number = phone_number
-            user.set_password(password=password)
-            db_sess.add(user)
-            db_sess.commit()
-            db_sess.close()
-        print(name, address, phone_number, password)
-        return redirect("/")
+        if name != "" and address != "" and phone_number != "" and password != "":
+            if "".join(name.split()).isalpha() and phone_number.isdigit() and len(phone_number) == 11 and \
+                    len(password) >= 8:
+                if not db_sess.query(User).filter(User.phone_number == phone_number).first():
+                    user = User()
+                    user.name = name
+                    user.address = address
+                    user.phone_number = phone_number
+                    user.set_password(password=password)
+                    db_sess.add(user)
+                    db_sess.commit()
+                    db_sess.close()
+                else:
+                    return render_template("reg.html", error_text="Аккаунт с таким номером телефона уже существует!")
+            else:
+                return render_template("reg.html", error_text="Ошибка при вводе данных")
+        else:
+            return render_template("reg.html", error_text="Нужно заполнить все поля!")
+        return redirect("/login")
     return render_template("reg.html")
 
 
@@ -228,18 +266,23 @@ def change_product(product_id):
         image = req.get("image")
         price = req.get("price")
         description = req.get("description")
-        if name and image and price and description:
-            product = Product()
-            product.name = name
-            product.image = image
-            product.price = price
-            product.description = description
-            db_sess.query(Product).filter(Product.id == product_id).update(
-                {Product.name: product.name, Product.image: product.image, Product.price: product.price,
-                 Product.description: description})
-            db_sess.commit()
-            db_sess.close()
-            return redirect("/")
+        if name and image and price:
+            if price.isdigit():
+                product = Product()
+                product.name = name
+                product.image = image
+                product.price = price
+                product.description = description
+                db_sess.query(Product).filter(Product.id == product_id).update(
+                    {Product.name: product.name, Product.image: product.image, Product.price: product.price,
+                     Product.description: description})
+                db_sess.commit()
+                db_sess.close()
+                return redirect("/admin")
+            else:
+                return render_template("admin_change_product.html", wrong_data=True)
+        else:
+            return render_template("admin_change_product.html", empty_form=True)
     db_sess = db_session.create_session()
     product = db_sess.query(Product).filter(Product.id == product_id).first()
     return render_template("admin_change_product.html",
@@ -250,7 +293,7 @@ def change_product(product_id):
                            description=product.description)
 
 
-@app.route('/delete_product/<int:product_id>')
+@app.route('/admin/delete_product/<int:product_id>')
 def delete_product(product_id):
     db_sess = db_session.create_session()
     db_sess.query(Product).filter(Product.id == product_id).delete()
