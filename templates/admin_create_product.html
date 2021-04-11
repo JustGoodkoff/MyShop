@@ -25,6 +25,15 @@
     </style>
 </head>
 <body>
+{% if empty_form %}
+<div class="alert alert-warning" role="alert">
+    Все поля, кроме описания, должны быть заполненными!
+</div>
+{% elif wrong_data %}
+<div class="alert alert-danger" role="alert">
+  Цена должна быть целым числом.
+</div>
+{% endif %}
 <form action="/admin/create_product" method="post">
 
     <div class="mb-0">

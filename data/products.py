@@ -8,6 +8,6 @@ class Product(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, index=True,
                            primary_key=True, autoincrement=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True, default="")
-    name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
-    price = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=False, default="")
+    price = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, default=0)
     description = sqlalchemy.Column(sqlalchemy.Text, default="Описание отсутствует")

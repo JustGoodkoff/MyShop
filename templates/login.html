@@ -24,30 +24,41 @@
         }
 
 
+
     </style>
 
 </head>
 <body>
-    <form action="/login" method="post">
-        <div class="mb-0">
-                    <h1>Авторизация</h1>
-                </div>
-        <div class="cont">
-              <div class="mb-3">
-                <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
-                <input type="text" name="phone_number" class="form-control" value="fuck" id="inputPhoneNumber" aria-describedby="PhoneNumber">
-              </div>
-              <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Пароль</label>
-                <input type="password" name="password" class="form-control" id="exampleInputPassword1">
-              </div>
-              <div>
-                   <button type="submit" class="btn btn-primary mb-3">Войти</button>
-              </div>
-              <div class="mb-3">
-                  <a href="/registration">Еще нет аккаунта? Зарегистрироваться</a>
-              </div>
+{% if empty_form %}
+<div class="alert alert-warning" role="alert">
+    Нужно заполнить все поля!
+</div>
+{% elif wrong_data %}
+<div class="alert alert-danger" role="alert">
+  Неверный логин или пароль!
+</div>
+{% endif %}
+<form action="/login" method="post">
+    <div class="mb-0 mt-2">
+        <h1>Авторизация</h1>
+    </div>
+    <div class="cont">
+        <div class="mb-3">
+            <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
+            <input type="text" name="phone_number" class="form-control" id="inputPhoneNumber"
+                   aria-describedby="PhoneNumber">
         </div>
+        <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary mb-3">Войти</button>
+        </div>
+        <div class="mb-3">
+            <a href="/registration">Еще нет аккаунта? Зарегистрироваться</a>
+        </div>
+    </div>
 </form>
 </body>
 </html>

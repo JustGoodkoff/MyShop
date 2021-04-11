@@ -28,26 +28,32 @@
 
 </head>
 <body>
+{% if error_text %}
+<div class="alert alert-danger" role="alert">
+    {{ error_text }}
+</div>
+{% endif %}
     <form action="/registration" method="post">
-        <div class="mb-0">
+        <div class="mb-0 mt-2">
                     <h1>Регистрация</h1>
                 </div>
         <div class="cont">
               <div class="mb-3">
                 <label for="inputName" class="form-label">Имя</label>
-                <input type="text" name="name" class="form-control" id="inputName">
+                <input type="text" name="name" class="form-control" placeholder="Иван Иванов" id="inputName">
               </div>
               <div class="mb-3">
                 <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
-                <input type="text" name="phone_number" class="form-control" id="inputPhoneNumber" aria-describedby="PhoneNumber">
+                <input type="text" name="phone_number" class="form-control" placeholder="89997777777" id="inputPhoneNumber" aria-describedby="PhoneNumber">
               </div>
               <div class="mb-3">
                 <label for="inputAddress" class="form-label">Домашний адрес</label>
-                <input type="text" name="address" class="form-control" id="inputAddress">
+                <input type="text" name="address" placeholder="город Красноярск, улица Ленина, 1" class="form-control" id="inputAddress">
               </div>
               <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label">Пароль</label>
                 <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+                  <small id="passwordHelp" class="form-text text-muted">Пароль должен содержать не менее 8 символов.</small>
               </div>
               <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
         </div>
