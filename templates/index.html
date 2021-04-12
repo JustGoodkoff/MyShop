@@ -9,17 +9,29 @@
 <a class="btn btn-warning mt-2 mb-2" href="/create_order/{{ cart }}/{{ total_cost }}">Оформить заказ</a>
 {% endif %}
 {% endif %}
+{% if page == "home" %}
 <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+    <button class="btn btn-outline-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
-        {active_sort}
+        {{active_sort}}
     </button>
     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        <a class="dropdown-item active" href="#">Сначала актуальные</a>
-        <a class="dropdown-item" href="#">Сначала подешевле</a>
-        <a class="dropdown-item" href="#">Сначала подороже</a>
+        {% if active_sort == "Сначала актуальные" %}
+        <a class="dropdown-item active" href="/">Сначала актуальные</a>
+        <a class="dropdown-item" href="/sorted_by_low_price">Сначала подешевле</a>
+        <a class="dropdown-item" href="/sorted_by_high_price">Сначала подороже</a>
+        {% elif active_sort == "Сначала подешевле" %}
+        <a class="dropdown-item" href="/">Сначала актуальные</a>
+        <a class="dropdown-item active" href="/sorted_by_low_price">Сначала подешевле</a>
+        <a class="dropdown-item" href="/sorted_by_high_price">Сначала подороже</a>
+        {% else %}
+        <a class="dropdown-item" href="/">Сначала актуальные</a>
+        <a class="dropdown-item" href="/sorted_by_low_price">Сначала подешевле</a>
+        <a class="dropdown-item active" href="/sorted_by_high_price">Сначала подороже</a>
+        {% endif %}
     </div>
 </div>
+{% endif %}
 <div class="row row-cols-1 row-cols-md-4 g-4 mt-2">
     {% for product in lst_products %}
     <div class="col">

@@ -7,7 +7,6 @@ from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
-from flask_login import user_logged_in
 
 from data import db_session
 from data.orders import Order
@@ -31,7 +30,7 @@ def home():
     lst_products = db_sess.query(Product).all()
     db_sess.close()
     return render_template('index.html', title='Домашняя страница',
-                           page="home", lst_products=lst_products)
+                           page="home", lst_products=lst_products, active_sort="Сначала актуальные")
 
 
 @login_manager.user_loader
@@ -72,6 +71,26 @@ def show_selected_order(order_id):
     order = order.order
     lst_products = [db_sess.query(Product).filter(Product.id == i).first() for i in order.split(",")]
     return render_template("index.html", lst_products=lst_products)
+
+
+@app.route('/sorted_by_low_price', methods=['GET', 'POST'])
+def sorted_by_low_price():
+    db_sess = db_session.create_session()
+    lst_products = db_sess.query(Product).all()
+    lst_products.sort(key=lambda x: int(x.price))
+    db_sess.close()
+    return render_template('index.html', title='Домашняя страница',
+                           page="home", lst_products=lst_products, active_sort="Сначала подешевле")
+
+
+@app.route('/sorted_by_high_price', methods=['GET', 'POST'])
+def sorted_by_high_price():
+    db_sess = db_session.create_session()
+    lst_products = db_sess.query(Product).all()
+    lst_products.sort(key=lambda x: -int(x.price))
+    db_sess.close()
+    return render_template('index.html', title='Домашняя страница',
+                           page="home", lst_products=lst_products, active_sort="Сначала подороже")
 
 
 @app.route('/product/<int:product_id>', methods=['GET', 'POST'])
