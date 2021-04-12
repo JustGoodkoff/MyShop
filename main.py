@@ -127,6 +127,8 @@ def cart():
             cart = session["cart"]
             lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
             total_cost = sum([i.price for i in lst_products])
+            cart = ",".join([str(id) for id in cart])
+            session["cart"] = []
             return render_template("index.html", title='Корзина',
                                    page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
         else:

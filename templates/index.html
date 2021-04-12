@@ -2,29 +2,40 @@
 
 {% block content %}
 {% if page == "cart" %}
-    {% if empty_cart %}
-        <h2 class="mt-3">В вашей корзине пока ничего нет</h2>
-    {% else %}
-        <h2 class="mt-3">Общая стоимость заказа: {{ total_cost }}</h2>
-        <a class="btn btn-warning mt-2 mb-2" href="/create_order/{{ cart }}/{{ total_cost }}">Оформить заказ</a>
-    {% endif %}
+{% if empty_cart %}
+<h2 class="mt-3">В вашей корзине пока ничего нет</h2>
+{% else %}
+<h2 class="mt-3">Общая стоимость заказа: {{ total_cost }}</h2>
+<a class="btn btn-warning mt-2 mb-2" href="/create_order/{{ cart }}/{{ total_cost }}">Оформить заказ</a>
 {% endif %}
+{% endif %}
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+        {active_sort}
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item active" href="#">Сначала актуальные</a>
+        <a class="dropdown-item" href="#">Сначала подешевле</a>
+        <a class="dropdown-item" href="#">Сначала подороже</a>
+    </div>
+</div>
 <div class="row row-cols-1 row-cols-md-4 g-4 mt-2">
     {% for product in lst_products %}
     <div class="col">
 
-            <div class="card mb-3">
-<!--            <img src="/static/img/{{product.image}}" class="image" >-->
-                <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
-            <div class="card-body" >
-                <p class="card-text"> <a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
+        <div class="card mb-3">
+            <!--            <img src="/static/img/{{product.image}}" class="image" >-->
+            <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
+            <div class="card-body">
+                <p class="card-text"><a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
                 {% if page == "home" %}
-                    <a href="/add_to_cart/{{ product.id }}" class="btn btn-primary">В корзину</a>
+                <a href="/add_to_cart/{{ product.id }}" class="btn btn-primary">В корзину</a>
                 {% elif page == "cart" %}
-                    <a href="/delete_from_cart/{{ product.id }}" class="btn btn-danger">Удалить</a>
+                <a href="/delete_from_cart/{{ product.id }}" class="btn btn-danger">Удалить</a>
                 {% endif %}
             </div>
-                <div class="card-footer bg-transparent">{{product.price}}</div>
+            <div class="card-footer bg-transparent">{{product.price}}</div>
 
         </div>
     </div>
