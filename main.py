@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from flask import Flask
 from flask import render_template
 from flask import request, redirect
@@ -28,6 +30,7 @@ def main():
 def home():
     db_sess = db_session.create_session()
     lst_products = db_sess.query(Product).all()
+    lst_products.reverse()
     db_sess.close()
     return render_template('index.html', title='Домашняя страница',
                            page="home", lst_products=lst_products, active_sort="Сначала актуальные")
@@ -37,6 +40,12 @@ def home():
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
+
+
+@app.before_request
+def before_request():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(days=31)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -97,28 +106,29 @@ def sorted_by_high_price():
 def show_selected_product(product_id):
     db_sess = db_session.create_session()
     product = db_sess.query(Product).filter(Product.id == product_id).first()
-    print(product)
-    return render_template("product.html", name=product.name, image=product.image, description=product.description)
+    return render_template("product.html", product_id=product_id, name=product.name, price=product.price,
+                           image=product.image, description=product.description)
 
 
 @app.route('/my_orders', methods=['GET', 'POST'])
 def my_orders():
     db_sess = db_session.create_session()
     orders = db_sess.query(Order).filter(Order.user_id == current_user.get_id()).all()
+    orders.reverse()
     if not orders:
         return render_template("orders.html", title="Заказы", empty_orders=True)
     else:
         return render_template("orders.html", title="Заказы", orders=orders)
 
 
-@app.route("/create_order/<string:cart>/<int:total_cost>", methods=['GET', 'POST'])
-def create_order(cart, total_cost):
+@app.route("/create_order/<string:products_in_cart>/<int:total_cost>", methods=['GET', 'POST'])
+def create_order(products_in_cart, total_cost):
     db_sess = db_session.create_session()
     order = Order()
     order.user_id = current_user.get_id()
-    order.order = cart
+    order.order = products_in_cart
     order.total_price = total_cost
-    order.quantity_of_goods = len(cart.split(","))
+    order.quantity_of_goods = len(products_in_cart.split(","))
     db_sess.add(order)
     db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ""})
     db_sess.commit()
@@ -128,52 +138,54 @@ def create_order(cart, total_cost):
 
 @app.route("/cart", methods=["GET", "POST"])
 def cart():
+    session.permanent = True
     db_sess = db_session.create_session()
     if current_user.get_id():
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
-        cart = user.cart.split(",")
-        cart = delete_removed_products(cart)
-        if not cart:
+        products_in_cart = user.cart.split(",")
+        products_in_cart = delete_removed_products(products_in_cart, "db")
+        if not products_in_cart:
             return render_template("index.html", page="cart", empty_cart=True)
         else:
-            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
-            cart = ",".join(cart)
+            products_in_cart = ",".join(products_in_cart)
             return render_template("index.html", title='Корзина',
-                                   page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+                                   page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
     else:
         if session.get("cart"):
-            cart = session["cart"]
-            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in cart]
+            products_in_cart = session["cart"]
+            products_in_cart = delete_removed_products(products_in_cart, "session")
+            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
-            cart = ",".join([str(id) for id in cart])
-            session["cart"] = []
+            products_in_cart = ",".join([str(id) for id in products_in_cart])
             return render_template("index.html", title='Корзина',
-                                   page="cart", cart=cart, lst_products=lst_products, total_cost=total_cost)
+                                   page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
         else:
             return render_template("index.html", page="cart", empty_cart=True)
 
 
-def delete_removed_products(products_id):
+def delete_removed_products(products_id, data):
     db_sess = db_session.create_session()
     new_cart = []
     for product_id in products_id:
         if product_id != "":
             if db_sess.query(Product).filter(Product.id == int(product_id)).first():
                 new_cart.append(product_id)
-    if not len(new_cart) == len(products_id) and not len(new_cart) == 0:
-        db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ",".join([i for i in new_cart])})
-    elif len(new_cart) == 0:
-        db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ""})
-    else:
-        return products_id
+    if data == "db":
+        if not len(new_cart) == len(products_id) and not len(new_cart) == 0:
+            db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ",".join([i for i in new_cart])})
+        elif len(new_cart) == 0:
+            db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ""})
+        else:
+            return products_id
     db_sess.commit()
     db_sess.close()
     return new_cart
 
 
 @app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
-def add_to_cart(product_id):
+def add_to_cart(product_id, page=None):
     if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
@@ -188,10 +200,8 @@ def add_to_cart(product_id):
     else:
         if session.get("cart"):
             session["cart"] = session.get("cart") + [product_id]
-            print(session["cart"])
         else:
             session["cart"] = [product_id]
-            print(session["cart"])
     return redirect("/")
 
 
@@ -200,15 +210,15 @@ def delete_from_cart(product_id):
     if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
-        cart = user.cart.split(",")
-        cart.remove(str(product_id))
-        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ",".join(cart)})
+        products_in_cart = user.cart.split(",")
+        products_in_cart.remove(str(product_id))
+        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ",".join(products_in_cart)})
         db_sess.commit()
         db_sess.close()
     else:
-        cart = session["cart"]
-        cart.remove(product_id)
-        session["cart"] = cart
+        products_in_cart = session["cart"]
+        products_in_cart.remove(product_id)
+        session["cart"] = products_in_cart
     return redirect("/cart")
 
 

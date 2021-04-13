@@ -25,8 +25,7 @@
     {% for product in lst_products %}
     <div class="col">
         <div class="card mb-3">
-            <!--            <img src="/static/img/{{product.image}}" class="image" >-->
-            <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
+                        <img src="/static/img/{{product.image}}" class="image" >
             <div class="card-body">
                 <p class="card-text"><a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
                 <a href="/admin/delete_product/{{ product.id }}" class="btn btn-danger ml-1">Удалить</a>

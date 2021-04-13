@@ -35,10 +35,9 @@
 <div class="row row-cols-1 row-cols-md-4 g-4 mt-2">
     {% for product in lst_products %}
     <div class="col">
-
         <div class="card mb-3">
-            <!--            <img src="/static/img/{{product.image}}" class="image" >-->
-            <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">
+                        <img src="/static/img/{{product.image}}" height="200" class="image" >
+<!--            <img src="/static/img/photo_2019-12-28_21-24-22.jpg" class="image">-->
             <div class="card-body">
                 <p class="card-text"><a class="text" href="/product/{{ product.id }}">{{ product.name }}</a></p>
                 {% if page == "home" %}
@@ -47,7 +46,7 @@
                 <a href="/delete_from_cart/{{ product.id }}" class="btn btn-danger">Удалить</a>
                 {% endif %}
             </div>
-            <div class="card-footer bg-transparent">{{product.price}}</div>
+            <div class="card-footer bg-transparent">{{product.price}} ₽</div>
 
         </div>
     </div>

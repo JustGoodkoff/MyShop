@@ -1,10 +1,12 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="product">
-
-    <h1>{{name}}</h1>
-    <img src="{{image}}">
-    <h3>{{description}}</h3>
+<div>
+    <div align="right" class="mt-3">
+        <a href="/add_to_cart/{{ product_id }}"  class="btn btn-lg btn-warning">В корзину</a>
+    </div>
+    <h1 class="mb-3">{{name}}</h1>
+    <img class="mb-3" src="/static/img/{{image}}" height="400" width="600">
+    <h3>Цена: {{price}}₽</h3>
+    <h5>Описание: {{description}}</h5>
 </div>
 {% endblock %}
