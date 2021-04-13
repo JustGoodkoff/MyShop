@@ -13,6 +13,7 @@ from flask_login import logout_user
 from data import db_session
 from data.orders import Order
 from data.products import Product
+from data.unreg_orders import UnregOrder
 from data.users import User
 
 app = Flask(__name__)
@@ -123,16 +124,42 @@ def my_orders():
 
 @app.route("/create_order/<string:products_in_cart>/<int:total_cost>", methods=['GET', 'POST'])
 def create_order(products_in_cart, total_cost):
-    db_sess = db_session.create_session()
-    order = Order()
-    order.user_id = current_user.get_id()
-    order.order = products_in_cart
-    order.total_price = total_cost
-    order.quantity_of_goods = len(products_in_cart.split(","))
-    db_sess.add(order)
-    db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ""})
-    db_sess.commit()
-    db_sess.close()
+    if current_user.get_id():
+        db_sess = db_session.create_session()
+        order = Order()
+        order.user_id = current_user.get_id()
+        order.order = products_in_cart
+        order.total_price = total_cost
+        order.quantity_of_goods = len(products_in_cart.split(","))
+        db_sess.add(order)
+        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ""})
+        db_sess.commit()
+        db_sess.close()
+    else:
+        if request.method == "POST":
+            db_sess = db_session.create_session()
+            req = request.form
+            address = req.get("address")
+            phone_number = req.get("phone_number")
+            if address != "" and phone_number != "":
+                if phone_number.isdigit() and len(phone_number) == 11:
+                    unreg_order = UnregOrder()
+                    unreg_order.user_phone_number = phone_number
+                    unreg_order.address = address
+                    unreg_order.order = products_in_cart
+                    unreg_order.total_price = total_cost
+                    db_sess.add(unreg_order)
+                    db_sess.commit()
+                    db_sess.close()
+                    session["cart"] = []
+                    return redirect("/")
+                else:
+                    return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost,
+                                           create_order=True, error_text="Ошибка при вводе данных")
+            else:
+                return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost,
+                                       create_order=True, error_text="Нужно заполнить все поля!")
+        return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost, create_order=True)
     return redirect("/")
 
 
@@ -185,7 +212,7 @@ def delete_removed_products(products_id, data):
 
 
 @app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
-def add_to_cart(product_id, page=None):
+def add_to_cart(product_id):
     if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
@@ -196,13 +223,13 @@ def add_to_cart(product_id, page=None):
                 {User.cart: User.cart + f",{product_id}"})
         db_sess.commit()
         db_sess.close()
-        return redirect("/")
+        return redirect(request.referrer)
     else:
         if session.get("cart"):
             session["cart"] = session.get("cart") + [product_id]
         else:
             session["cart"] = [product_id]
-    return redirect("/")
+    return redirect(request.referrer)
 
 
 @app.route("/delete_from_cart/<int:product_id>", methods=['GET', 'POST'])

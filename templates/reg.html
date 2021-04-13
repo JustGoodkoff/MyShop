@@ -24,6 +24,7 @@
         }
 
 
+
     </style>
 
 </head>
@@ -33,30 +34,50 @@
     {{ error_text }}
 </div>
 {% endif %}
-    <form action="/registration" method="post">
+{% if not create_order %}
+<form action="/registration" method="post">
+    <div class="mb-0 mt-2">
+        <h1>Регистрация</h1>
+    </div>
+    {% else %}
+    <form action="/create_order/{{products_in_cart }}/{{total_cost}}" method="post">
         <div class="mb-0 mt-2">
-                    <h1>Регистрация</h1>
-                </div>
+            <h1>Подтверждение заказа</h1>
+        </div>
+        {% endif %}
         <div class="cont">
-              <div class="mb-3">
+            {% if not create_order %}
+            <div class="mb-3">
                 <label for="inputName" class="form-label">Имя</label>
                 <input type="text" name="name" class="form-control" placeholder="Иван Иванов" id="inputName">
-              </div>
-              <div class="mb-3">
+            </div>
+            {% endif %}
+            <div class="mb-3">
                 <label for="inputPhoneNumber" class="form-label">Номер телефона</label>
-                <input type="text" name="phone_number" class="form-control" placeholder="89997777777" id="inputPhoneNumber" aria-describedby="PhoneNumber">
-              </div>
-              <div class="mb-3">
+                <input type="text" name="phone_number" class="form-control" placeholder="89997777777"
+                       id="inputPhoneNumber" aria-describedby="PhoneNumber">
+            </div>
+            <div class="mb-3">
                 <label for="inputAddress" class="form-label">Домашний адрес</label>
-                <input type="text" name="address" placeholder="город Красноярск, улица Ленина, 1" class="form-control" id="inputAddress">
-              </div>
-              <div class="mb-3">
+                <input type="text" name="address" placeholder="город Красноярск, улица Ленина, 1" class="form-control"
+                       id="inputAddress">
+            </div>
+            {% if not create_order %}
+            <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label">Пароль</label>
                 <input type="password" name="password" class="form-control" id="exampleInputPassword1">
-                  <small id="passwordHelp" class="form-text text-muted">Пароль должен содержать не менее 8 символов.</small>
-              </div>
-              <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                <small id="passwordHelp" class="form-text text-muted">Пароль должен содержать не менее 8
+                    символов.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary">Подтвердить</button>
+            <h6 class="mt-2">После подтверждения заказа на указанный Вами номер телефона
+                поступит звонок, для завершения оформления. Оформить заказ можно либо
+                <a href="/login">войдя в аккаунт</a> либо, <a href="/registration">зарегистрировавшись</a></h6>
+            {% endif %}
         </div>
+    </form>
 </form>
 </body>
 </html>

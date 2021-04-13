@@ -13,7 +13,7 @@ class User(SqlAlchemyBase, UserMixin):
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     phone_number = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
     address = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     cart = sqlalchemy.Column(sqlalchemy.String, default="")
 
     def set_password(self, password):
