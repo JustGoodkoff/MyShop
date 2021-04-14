@@ -6,7 +6,7 @@
 <h2 class="mt-3">В вашей корзине пока ничего нет</h2>
 {% else %}
 <h2 class="mt-3">Общая стоимость заказа: {{ total_cost }} ₽</h2>
-<a class="btn btn-warning mt-2 mb-2" href="/create_order/{{ cart }}/{{ total_cost }}">Оформить заказ</a>
+<a class="btn btn-warning mt-2 mb-2" href="/create_order/{{ cart }}/">Оформить заказ</a>
 {% endif %}
 {% endif %}
 {% if page == "home" %}

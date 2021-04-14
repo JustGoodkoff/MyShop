@@ -122,11 +122,13 @@ def my_orders():
         return render_template("orders.html", title="Заказы", orders=orders)
 
 
-@app.route("/create_order/<string:products_in_cart>/<int:total_cost>", methods=['GET', 'POST'])
-def create_order(products_in_cart, total_cost):
+@app.route("/create_order/<string:products_in_cart>/", methods=['GET', 'POST'])
+def create_order(products_in_cart):
     if current_user.get_id():
         db_sess = db_session.create_session()
         order = Order()
+        total_cost = sum(
+            [db_sess.query(Product).filter(Product.id == int(i)).first()["price"] for i in products_in_cart])
         order.user_id = current_user.get_id()
         order.order = products_in_cart
         order.total_price = total_cost
@@ -147,6 +149,9 @@ def create_order(products_in_cart, total_cost):
                     unreg_order.user_phone_number = phone_number
                     unreg_order.address = address
                     unreg_order.order = products_in_cart
+                    products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in
+                                products_in_cart.split(",")]
+                    total_cost = sum([product.price for product in products])
                     unreg_order.total_price = total_cost
                     db_sess.add(unreg_order)
                     db_sess.commit()
@@ -154,12 +159,12 @@ def create_order(products_in_cart, total_cost):
                     session["cart"] = []
                     return redirect("/")
                 else:
-                    return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost,
+                    return render_template("reg.html", products_in_cart=products_in_cart,
                                            create_order=True, error_text="Ошибка при вводе данных")
             else:
-                return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost,
+                return render_template("reg.html", products_in_cart=products_in_cart,
                                        create_order=True, error_text="Нужно заполнить все поля!")
-        return render_template("reg.html", products_in_cart=products_in_cart, total_cost=total_cost, create_order=True)
+        return render_template("reg.html", products_in_cart=products_in_cart, create_order=True)
     return redirect("/")
 
 
@@ -176,6 +181,7 @@ def cart():
         else:
             lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
+            lst_products.reverse()
             products_in_cart = ",".join(products_in_cart)
             return render_template("index.html", title='Корзина',
                                    page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
@@ -185,6 +191,7 @@ def cart():
             products_in_cart = delete_removed_products(products_in_cart, "session")
             lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
+            lst_products.reverse()
             products_in_cart = ",".join([str(id) for id in products_in_cart])
             return render_template("index.html", title='Корзина',
                                    page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
