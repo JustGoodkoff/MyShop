@@ -20,6 +20,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "my_shop_secret_key"
 login_manager = LoginManager()
 login_manager.init_app(app)
+count_products = 0
 
 
 def main():
@@ -29,12 +30,21 @@ def main():
 
 @app.route('/')
 def home():
+    global count_products
     db_sess = db_session.create_session()
     lst_products = db_sess.query(Product).all()
+    if current_user.get_id():
+        cart = db_sess.query(User).filter(User.id == current_user.get_id()).first().cart
+        if cart != "":
+            count_products = len(cart.split(","))
+    else:
+        cart = session.get("cart")
+        count_products = len(cart)
     lst_products.reverse()
     db_sess.close()
     return render_template('index.html', title='Домашняя страница',
-                           page="home", lst_products=lst_products, active_sort="Сначала актуальные")
+                           page="home", lst_products=lst_products,
+                           active_sort="Сначала актуальные", count_product=count_products)
 
 
 @login_manager.user_loader
@@ -61,17 +71,20 @@ def login():
             if user and user.check_password(password):
                 login_user(user)
                 if session.get("cart"):
-                    db_sess.query(User).filter(User.id == current_user.get_id()).update(
-                        {User.cart: User.cart + ",".join([str(i) for i in session["cart"]]) + ","})
+                    cart = db_sess.query(User).filter(User.id == current_user.get_id())
+                    if cart.first().cart != "":
+                        cart.update({User.cart: User.cart + "," + ",".join([str(i) for i in session["cart"]])})
+                    else:
+                        cart.update({User.cart: ",".join([str(i) for i in session["cart"]])})
                     session["cart"] = []
                 db_sess.commit()
                 db_sess.close()
                 return redirect("/")
             else:
-                return render_template("login.html", wrong_data=True)
+                return render_template("login.html", wrong_data=True, count_product=count_products)
         else:
-            return render_template("login.html", empty_form=True)
-    return render_template("login.html")
+            return render_template("login.html", empty_form=True, count_product=count_products)
+    return render_template("login.html", count_product=count_products)
 
 
 @app.route('/my_orders/<int:order_id>', methods=['GET', 'POST'])
@@ -80,7 +93,7 @@ def show_selected_order(order_id):
     order = db_sess.query(Order).filter(Order.id == order_id).first()
     order = order.order
     lst_products = [db_sess.query(Product).filter(Product.id == i).first() for i in order.split(",")]
-    return render_template("index.html", lst_products=lst_products)
+    return render_template("index.html", lst_products=lst_products, count_product=count_products)
 
 
 @app.route('/sorted_by_low_price', methods=['GET', 'POST'])
@@ -90,7 +103,8 @@ def sorted_by_low_price():
     lst_products.sort(key=lambda x: int(x.price))
     db_sess.close()
     return render_template('index.html', title='Домашняя страница',
-                           page="home", lst_products=lst_products, active_sort="Сначала подешевле")
+                           page="home", lst_products=lst_products, active_sort="Сначала подешевле",
+                           count_product=count_products)
 
 
 @app.route('/sorted_by_high_price', methods=['GET', 'POST'])
@@ -100,7 +114,8 @@ def sorted_by_high_price():
     lst_products.sort(key=lambda x: -int(x.price))
     db_sess.close()
     return render_template('index.html', title='Домашняя страница',
-                           page="home", lst_products=lst_products, active_sort="Сначала подороже")
+                           page="home", lst_products=lst_products, active_sort="Сначала подороже",
+                           count_product=count_products)
 
 
 @app.route('/product/<int:product_id>', methods=['GET', 'POST'])
@@ -108,7 +123,8 @@ def show_selected_product(product_id):
     db_sess = db_session.create_session()
     product = db_sess.query(Product).filter(Product.id == product_id).first()
     return render_template("product.html", product_id=product_id, name=product.name, price=product.price,
-                           image=product.image, description=product.description)
+                           image=product.image, description=product.description,
+                           count_product=count_products)
 
 
 @app.route('/my_orders', methods=['GET', 'POST'])
@@ -117,18 +133,21 @@ def my_orders():
     orders = db_sess.query(Order).filter(Order.user_id == current_user.get_id()).all()
     orders.reverse()
     if not orders:
-        return render_template("orders.html", title="Заказы", empty_orders=True)
+        return render_template("orders.html", title="Заказы", empty_orders=True,
+                               count_product=count_products)
     else:
-        return render_template("orders.html", title="Заказы", orders=orders)
+        return render_template("orders.html", title="Заказы", orders=orders, count_product=count_products)
 
 
 @app.route("/create_order/<string:products_in_cart>/", methods=['GET', 'POST'])
 def create_order(products_in_cart):
+    global count_products
     if current_user.get_id():
+        count_products = 0
         db_sess = db_session.create_session()
         order = Order()
-        total_cost = sum(
-            [db_sess.query(Product).filter(Product.id == int(i)).first()["price"] for i in products_in_cart])
+        total_cost = sum([db_sess.query(Product).filter(Product.id == int(i)).first().price
+                          for i in products_in_cart.split(",")])
         order.user_id = current_user.get_id()
         order.order = products_in_cart
         order.total_price = total_cost
@@ -137,6 +156,7 @@ def create_order(products_in_cart):
         db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ""})
         db_sess.commit()
         db_sess.close()
+
     else:
         if request.method == "POST":
             db_sess = db_session.create_session()
@@ -145,6 +165,7 @@ def create_order(products_in_cart):
             phone_number = req.get("phone_number")
             if address != "" and phone_number != "":
                 if phone_number.isdigit() and len(phone_number) == 11:
+                    count_products = 0
                     unreg_order = UnregOrder()
                     unreg_order.user_phone_number = phone_number
                     unreg_order.address = address
@@ -160,11 +181,14 @@ def create_order(products_in_cart):
                     return redirect("/")
                 else:
                     return render_template("reg.html", products_in_cart=products_in_cart,
-                                           create_order=True, error_text="Ошибка при вводе данных")
+                                           create_order=True, error_text="Ошибка при вводе данных",
+                                           count_product=count_products)
             else:
                 return render_template("reg.html", products_in_cart=products_in_cart,
-                                       create_order=True, error_text="Нужно заполнить все поля!")
-        return render_template("reg.html", products_in_cart=products_in_cart, create_order=True)
+                                       create_order=True, error_text="Нужно заполнить все поля!",
+                                       count_product=count_products)
+        return render_template("reg.html", products_in_cart=products_in_cart, create_order=True,
+                               count_product=count_products)
     return redirect("/")
 
 
@@ -177,26 +201,32 @@ def cart():
         products_in_cart = user.cart.split(",")
         products_in_cart = delete_removed_products(products_in_cart, "db")
         if not products_in_cart:
-            return render_template("index.html", page="cart", empty_cart=True)
+            return render_template("index.html", page="cart", empty_cart=True, count_product=count_products)
         else:
-            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
+            lst_products = [db_sess.query(Product)
+                                .filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
             lst_products.reverse()
             products_in_cart = ",".join(products_in_cart)
             return render_template("index.html", title='Корзина',
-                                   page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
+                                   page="cart", cart=products_in_cart, lst_products=lst_products,
+                                   total_cost=total_cost,
+                                   count_product=count_products)
     else:
         if session.get("cart"):
             products_in_cart = session["cart"]
             products_in_cart = delete_removed_products(products_in_cart, "session")
-            lst_products = [db_sess.query(Product).filter(Product.id == int(i)).first() for i in products_in_cart]
+            lst_products = [db_sess.query(Product)
+                                .filter(Product.id == int(i)).first() for i in products_in_cart]
             total_cost = sum([i.price for i in lst_products])
             lst_products.reverse()
             products_in_cart = ",".join([str(id) for id in products_in_cart])
             return render_template("index.html", title='Корзина',
-                                   page="cart", cart=products_in_cart, lst_products=lst_products, total_cost=total_cost)
+                                   page="cart", cart=products_in_cart, lst_products=lst_products,
+                                   total_cost=total_cost,
+                                   count_product=count_products)
         else:
-            return render_template("index.html", page="cart", empty_cart=True)
+            return render_template("index.html", page="cart", empty_cart=True, count_product=count_products)
 
 
 def delete_removed_products(products_id, data):
@@ -208,7 +238,8 @@ def delete_removed_products(products_id, data):
                 new_cart.append(product_id)
     if data == "db":
         if not len(new_cart) == len(products_id) and not len(new_cart) == 0:
-            db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ",".join([i for i in new_cart])})
+            db_sess.query(User).filter(User.id == current_user.id) \
+                .update({User.cart: ",".join([i for i in new_cart])})
         elif len(new_cart) == 0:
             db_sess.query(User).filter(User.id == current_user.id).update({User.cart: ""})
         else:
@@ -220,11 +251,14 @@ def delete_removed_products(products_id, data):
 
 @app.route("/add_to_cart/<int:product_id>", methods=['GET', 'POST'])
 def add_to_cart(product_id):
+    global count_products
+    count_products += 1
     if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
         if user.cart == "":
-            db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: product_id})
+            db_sess.query(User).filter(User.id == current_user.get_id()) \
+                .update({User.cart: product_id})
         else:
             db_sess.query(User).filter(User.id == current_user.get_id()).update(
                 {User.cart: User.cart + f",{product_id}"})
@@ -241,12 +275,15 @@ def add_to_cart(product_id):
 
 @app.route("/delete_from_cart/<int:product_id>", methods=['GET', 'POST'])
 def delete_from_cart(product_id):
+    global count_products
+    count_products -= 1
     if current_user.get_id():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.get_id()).first()
         products_in_cart = user.cart.split(",")
         products_in_cart.remove(str(product_id))
-        db_sess.query(User).filter(User.id == current_user.get_id()).update({User.cart: ",".join(products_in_cart)})
+        db_sess.query(User).filter(User.id == current_user.get_id()) \
+            .update({User.cart: ",".join(products_in_cart)})
         db_sess.commit()
         db_sess.close()
     else:
@@ -293,8 +330,8 @@ def register():
         phone_number = req.get("phone_number")
         password = req.get("password")
         if name != "" and address != "" and phone_number != "" and password != "":
-            if "".join(name.split()).isalpha() and phone_number.isdigit() and len(phone_number) == 11 and \
-                    len(password) >= 8:
+            if "".join(name.split()).isalpha() and phone_number.isdigit() \
+                    and len(phone_number) == 11 and len(password) >= 8:
                 if not db_sess.query(User).filter(User.phone_number == phone_number).first():
                     user = User()
                     user.name = name
@@ -305,7 +342,8 @@ def register():
                     db_sess.commit()
                     db_sess.close()
                 else:
-                    return render_template("reg.html", error_text="Аккаунт с таким номером телефона уже существует!")
+                    return render_template("reg.html",
+                                           error_text="Аккаунт с таким номером телефона уже существует!")
             else:
                 return render_template("reg.html", error_text="Ошибка при вводе данных")
         else:

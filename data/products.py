@@ -1,4 +1,5 @@
 import sqlalchemy
+
 from .db_session import SqlAlchemyBase
 
 
@@ -7,7 +8,7 @@ class Product(SqlAlchemyBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, index=True,
                            primary_key=True, autoincrement=True)
-    image = sqlalchemy.Column(sqlalchemy.String, nullable=True, default="")
+    image = sqlalchemy.Column(sqlalchemy.String, nullable=True, default="default.png")
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, default="")
     price = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, default=0)
     description = sqlalchemy.Column(sqlalchemy.Text, default="Описание отсутствует")

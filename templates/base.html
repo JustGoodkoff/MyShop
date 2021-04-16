@@ -24,6 +24,8 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Главная</a>
             <div class="navbar-right">
+                <a href="/cart" class="btn btn-outline-dark mr-3">Корзина
+                    <span class="badge badge-dark">{{count_product}}</span></a>
                 {% if current_user.is_authenticated %}
                 <div class="btn-group">
                     <button class="btn btn-dark dropdown-toggle navbar-right" type="button"
@@ -32,18 +34,17 @@
                         {{ current_user.name }}
                     </button>
                     <button class="dropdown-menu dropdown-menu-lg-right">
-                        <a class="dropdown-item" href="/cart">Корзина</a>
+                        <a class="dropdown-item" href="/cart">Корзина <span
+                                class="badge badge-danger">{{count_product}}</span></a>
                         <a class="dropdown-item" href="/my_orders">Мои заказы</a>
-                        <a class="dropdown-item" href="#">Личные данные</a>
-
                         <a>
                             <hr class="dropdown-divider">
                         </a>
                         <a class="dropdown-item" href="/logout">Выйти</a>
+
                     </button>
                 </div>
                 {% else %}
-                <a href="/cart" class="btn btn-outline-dark mr-3">Корзина</a>
                 <a href="/login" class="btn btn-dark">Войти</a>
                 {% endif %}
 
